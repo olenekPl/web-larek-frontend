@@ -1,61 +1,68 @@
-//типы для товара
-export interface IProduct {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  category: string;
-  price: number | null;
-}
-
-//массив товаров с сервера (приходят)
-export interface IProductList {
-  total: number;
-  items: IProduct[];
-}
-
-//типы для корзины
-export interface ICartItem {
-  id: string;
-  title: string;
-  price: number;
-  quantity: number;
-}
-
-//типы для оформления заказа
-export enum PaymentMethod {
-  Online = 'online',
-  OnDelivery = 'onDelivery'
-}
-
-//форма заказа
-export interface IOrderForm {
-  payment: PaymentMethod;
-  email: string;
-  phone: string;
-  address: string;
-  total: number;
-  items: string[];
+ //типы для товара
+ export interface IProduct {
+    id: string;
+    description: string;
+    image: string;
+    title: string;
+    category: string;
+    price: number | null;
 }
 
 //мод окно способ оплаты
-export type IPaymentForm = Pick<IOrderForm, 'payment' | 'address'>;
+export interface IPaymentForm {
+    payment: string;
+    address: string;
+}
 
 //мод окно эмеил
-export type IContactForm = Pick<IOrderForm, 'email' | 'phone'>;
+export interface IContactForm {
+    email: string;
+    phone: string;
+}
 
-//результат оформления заказа
-export interface IOrderResult {
-  id: string;
-  total: number;
+//форма заказа
+export interface IOrder extends IPaymentForm, IContactForm {
+    total: number;
+    items: string[];
+}
+
+//типы для корзины
+export interface ICart {
+    items: HTMLElement[]; //список товаров в корзине
+    total: number; //получившаяся сумма
 }
 
 //главная страница
 export interface IAppState {
-	catalog: IProduct[]; 
-	order: IOrderForm | null;
-	cart: ICartItem;	
+    catalog: IProduct[];
+    cart: string[];
+    preview: string | null; //предпросмотр
+    order: IOrder | null;
+    loading: boolean; //загрузка
+}
+
+//результат оформления заказа
+export interface IOrderResult {
+    id: string;
+    total: number;
 }
 
 //ошибка в форме
-export type FormErrors = Partial<Record<keyof IOrderForm, string>>;
+export type FormErrors = Partial<Record<keyof IOrder, string>>;
+
+//карточка
+export interface ICards extends IProduct {
+    index?: string;
+    buttonTitle?: string;
+}
+
+//главная страница
+export interface IPage {
+    counter: number; //счетчик
+    gallery: HTMLElement[];
+}
+
+//данные событий
+export interface IActions {
+    onClick: (event: MouseEvent) => void; //событие по клику
+}

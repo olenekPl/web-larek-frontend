@@ -56,22 +56,28 @@ interface IProduct {
 }
 ```
 
-Массив товаров, приходящих с сервера
+Интерфейс для модального окна способ оплаты
 
 ```
-interface IProductList {
-  total: number;
-  items: IProduct[];
+interface IPaymentForm {
+  payment: string;
+  address: string;
 }
 ```
+
+Интерфейс для модального окна контактные данные
+
+```
+interface IContactForm {
+  email: string;
+  phone: string;
+}
+```
+
 Форма заказа
 
 ```
-interface IOrderForm {
-  payment: PaymentMethod;
-  email: string;
-  phone: string;
-  address: string;
+interface IOrder extends IPaymentForm, IContactForm {
   total: number;
   items: string[];
 }
@@ -80,11 +86,9 @@ interface IOrderForm {
 Корзина
 
 ```
-interface ICartItem {
-  id: string;
-  title: string;
-  price: number;
-  quantity: number;
+interface ICart {
+  items: HTMLElement[]; //список товаров в корзине
+  total: number; //получившаяся сумма
 }
 ```
 
@@ -92,22 +96,12 @@ interface ICartItem {
 
 ```
 interface IAppState {
-	catalog: IProduct[]; 
-	order: IOrderForm;
-	cart: ICartItem;	
+  catalog: IProduct[];
+  cart: string[];
+  preview: string | null; //предпросмотр
+  order: IOrder | null;
+  loading: boolean; //загрузка
 }
-```
-
-Интерфейс для модального окна способ оплаты
-
-```
-type IPaymentForm = Pick<IOrderForm, 'payment' | 'address'>;
-```
-
-Интерфейс для модального окна контактные данные
-
-```
-type IContactForm = Pick<IOrderForm, 'email' | 'phone'>;
 ```
 
 Результат оформления заказа
@@ -123,6 +117,32 @@ interface IOrderResult {
 
 ```
 type FormErrors = Partial<Record<keyof IOrderForm, string>>;
+```
+
+Данные карточки товара
+
+```
+interface ICards extends IProduct {
+    index?: string;
+    buttonTitle?: string;
+}
+```
+
+Главная страница
+
+```
+interface IPage {
+    counter: number; //счетчик
+    gallery: HTMLElement[];
+}
+```
+
+Данные событий
+
+```
+interface IActions {
+    onClick: (event: MouseEvent) => void; //событие по клику
+}
 ```
 
 ## Архитектура приложения
@@ -198,7 +218,7 @@ type FormErrors = Partial<Record<keyof IOrderForm, string>>;
 
 Основные свойства: 
 
-- cart - корзина покупок;
+- basket - корзина покупок;
 - catalog - массив товаров, доступных для выбора;
 - order - форма заказа с данными клиента;
 - preview - предварительный просмотр товара;
@@ -207,8 +227,8 @@ type FormErrors = Partial<Record<keyof IOrderForm, string>>;
 
 Основные методы:
 
-- refreshCart() - вызывает обновления, связанные с количеством и содержимым корзины;
-- clearCart() - очищает корзину;
+- refreshBasket() - вызывает обновления, связанные с количеством и содержимым корзины;
+- clearBasket() - очищает корзину;
 - handleCartAction(action, item): добавляет или удаляет товар из корзины;
 - setCatalog(items) - обновляет каталог товаров;
 - setPreview(item) - устанавливает текущий товар для предпросмотра;
@@ -217,6 +237,19 @@ type FormErrors = Partial<Record<keyof IOrderForm, string>>;
 - validateContactForm() - проверяет правильность введенных контактов, обновляет formErrors;
 - validatePaymentForm() - проверяет правильность заказа, обновляет formErrors;
 - clearOrder() - сбрасывает поля заказа в начальное состояние.
+
+#### Класс Product
+
+Используется для создания, управления и работы с данными продукта. Является наследником Model. Использует интерфейс IProduct.
+
+Основные свойства: 
+
+- id: string — идентификатор продукта;
+- description: string — описание товара;
+- image: string — изображение продукта;
+- title: string — название товара;
+- category: string — категория, к которой принадлежит товар;
+- price: number | null — цена товара.
 
 ### Слой представления
 
@@ -248,7 +281,7 @@ type FormErrors = Partial<Record<keyof IOrderForm, string>>;
 
 - render(state: Partial<T> & IFormState) - обновляет состояние формы, вызывая родительский render, устанавливает остальные свойства формы и возвращает сам элемент формы.
 
-#### Класс Cart
+#### Класс Basket
 
 Управляет отображением списка товаров в корзине, общей ценой и кнопкой для оформления заказа. Наследуется от Component.
 
@@ -280,6 +313,18 @@ type FormErrors = Partial<Record<keyof IOrderForm, string>>;
 - set address(value) - устанавливает значение поля адреса;
 - toggleButton(toggleOn) - переключает активность кнопок.
 
+#### Класс ContactForm
+
+Компонент формы для ввода контактных данных (телефон и email). Наследуется от Form.
+
+Основные функции:
+
+- constructor(container: HTMLFormElement, events: IEvents)Конструктор - получает HTML-элемент формы и объект событий events, передает их в базовый класс Form;
+- Геттер phone - возвращает значение поля phone формы, получая его через DOM-элемент с name="phone", использует приведение типа HTMLInputElement, чтобы обратиться к свойству value;
+- Сеттер phone - устанавливает значение поля phone через DOM-элемент с name="phone";
+- Геттер email - возвращает значение поля email;
+- Сеттер email - позволяет задать значение поля email.
+
 #### Класс Card
 
 Карточка товара. Управляет отображением данных, таких как заголовок, цена, изображение, категория и действие по кнопке. Наследуется от Component.
@@ -292,6 +337,27 @@ type FormErrors = Partial<Record<keyof IOrderForm, string>>;
 - text - текстовое описание;
 - image - изображение;
 - category - категория товара;
+
+#### Класс ShopApi
+
+Позволяет получать список товаров, отдельный товар по идентификатору и размещать заказы. Этот класс наследует базовые функции API из класса Api и реализует интерфейс IShopApi.
+
+Основные функции:
+
+- constructor(cdn: string, baseUrl: string, options?: RequestInit) Конструктор - инициализирует объект API с базовым URL и опциями запроса, сохраняет cdn — базовый путь для изображений;
+- getItemList() - получает список товаров с сервера, проходит по каждому товару и добавляет к полю image полный путь, присоединив cdn, возвращает промис с массивом товаров;
+- getItem(id: string) - получает единичный товар по его идентификатору, формирует полный URL для изображения, добавляя cdn, возвращает промис с объектом товара;
+- orderItems(order: IOrder) - отправляет заказ на сервер, передает объект заказа, получает и возвращает результат выполнения заказа.
+
+#### Класс Success
+
+Компонент пользовательского интерфейса, отображающий сообщение об успешном завершении операции. Расширяет базовый класс Component и управляет отображением и поведением элементов внутри этого компонента.
+
+Основные функции:
+
+- constructor(container: HTMLElement, actions: ISuccessActions) Конструктор - принимает корневой контейнер элемента, внутри которого расположен компонент, принимает объект actions с коллбэками, внутри конструктора ищет важные DOM-элементы: .order-success__close — элемент, по которому вызывается событие закрытия, .order-success__description — элемент, в который вставляется текст описания, назначает обработчик клика на кнопку закрытия;
+- Геттер description - возвращает текущий текст внутри элемента _description;
+- Сеттер description - устанавливает текст в _description, добавляя к нему динамический текст.
 
 ## Взаимодействие компонентов
 
