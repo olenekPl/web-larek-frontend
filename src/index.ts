@@ -243,9 +243,7 @@ function handleOrderSubmit() {
           content: success.render({})
         });
       })
-    .catch(err => {
-        console.error(err);
-    });
+      .catch(console.error);
 }
 
 //переключение режима оплаты

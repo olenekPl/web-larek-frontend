@@ -28,7 +28,7 @@ export default class Basket extends Component<ICart> {
     //включает или выключает кнопку
     toggleButton(isDisabled: boolean){
         if (this._button) {
-          this._button.disabled = isDisabled;
+            this.setDisabled(this._button, isDisabled);
         }
     }
   

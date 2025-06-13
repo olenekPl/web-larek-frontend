@@ -12,7 +12,7 @@ export default class Order extends Form<IPaymentForm> {
 
         this._cardPaymentButton = ensureElement<HTMLButtonElement>('button[name="card"]', this.container);
         this._cashPaymentButton = ensureElement<HTMLButtonElement>('button[name="cash"]', this.container);
-        this._cardPaymentButton.classList.add('button_alt-active');
+        this.toggleClass(this._cardPaymentButton, 'button_alt-active', true);
 
         if (actions?.onClick) {
             this.addButtonClickHandler(actions.onClick);
@@ -31,7 +31,7 @@ export default class Order extends Form<IPaymentForm> {
     }
 
     toggleButton(toggleOn: HTMLElement) {
-        this._cardPaymentButton.classList.toggle('button_alt-active', toggleOn === this._cardPaymentButton);
-        this._cashPaymentButton.classList.toggle('button_alt-active', toggleOn === this._cashPaymentButton);
+        this.toggleClass(this._cardPaymentButton, 'button_alt-active', toggleOn === this._cardPaymentButton);
+        this.toggleClass(this._cashPaymentButton, 'button_alt-active', toggleOn === this._cashPaymentButton);
     }
 }

@@ -33,7 +33,7 @@ export default class Card extends Component<ICards> {
     //отключает кнопку, если цена равна 0
     disableButton(value: number | null) {
         if (value === null && this._button) {
-            this._button.disabled = true;
+            this.setDisabled(this._button, true);
         }
     }
        
@@ -82,7 +82,7 @@ export default class Card extends Component<ICards> {
 
     set category(value: string) {
         this.setText(this._category, value);
-        this._category.classList.add(cardCategory[value])
+        this.toggleClass(this._category, cardCategory[value], true);
     }
 
     get category(): string {
